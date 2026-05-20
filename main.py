@@ -9,6 +9,8 @@ import numpy as np
 
 from tensorflow.keras import layers, Model, Input
 from tensorflow.keras.models import load_model
+from tensorflow.keras.saving import register_keras_serializable
+
 from sklearn.model_selection import train_test_split
 
 # ========================
@@ -17,12 +19,9 @@ from sklearn.model_selection import train_test_split
 
 IMG_SIZE = 100
 DATASET_PATH = "extract"
-MODEL_PATH = "modelo_assinatura.h5"
+MODEL_PATH = "modelo_assinatura.keras"
 
-# limiar de decisão
 THRESHOLD = 0.5
-
-# épocas de treinamento
 EPOCHS = 20
 
 # ========================
@@ -80,8 +79,10 @@ def create_pairs(base_path):
     labels = []
 
     persons = sorted([
+
         p for p in os.listdir(base_path)
         if "_forg" not in p
+
     ])
 
     for person in persons:
@@ -205,6 +206,7 @@ def create_base_network(input_shape):
 # DISTÂNCIA ENTRE FEATURES
 # ========================
 
+@register_keras_serializable()
 def signature_distance(vectors):
 
     x, y = vectors
@@ -279,7 +281,10 @@ if os.path.exists(MODEL_PATH):
 
         compile=False,
 
-        safe_mode=False
+        custom_objects={
+            "signature_distance":
+            signature_distance
+        }
     )
 
     model.compile(
